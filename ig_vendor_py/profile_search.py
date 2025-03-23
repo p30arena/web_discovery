@@ -13,10 +13,11 @@ ACCOUNT_PASSWORD = os.getenv("ACCOUNT_PASSWORD")
 def search_profiles(keywords, location=None):
     results = []
     for keyword in keywords:
-        users = cl.search_users_v1(keyword, 10)  # Limit to 10 users per keyword
+        users = cl.search_users_v1(keyword, 3)  # Limit to 3 users per keyword
         for user in users:
             try:
                 user_info = cl.user_info(user.pk)
+                print(user_info)
                 profile = Profile.create(
                     username=user_info.username,
                     full_name=user_info.full_name,
@@ -31,6 +32,8 @@ def search_profiles(keywords, location=None):
             except IntegrityError:
                 # Profile already exists
                 pass
+            except KeyError as e:
+                print(f"KeyError: {e}")
     return results
 
 
