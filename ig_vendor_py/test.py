@@ -1,43 +1,42 @@
 import os
-
-from instagrapi import Client
-from instagrapi.exceptions import LoginRequired
 from dotenv import load_dotenv
+from models import create_tables, Profile, Assessment, Product
+from peewee import IntegrityError
 
 load_dotenv()
 
-ACCOUNT_USERNAME = os.getenv("ACCOUNT_USERNAME")
-ACCOUNT_PASSWORD = os.getenv("ACCOUNT_PASSWORD")
+db_name = os.getenv("POSTGRES_DB")
+db_user = os.getenv("POSTGRES_USER")
+db_password = os.getenv("POSTGRES_PASSWORD")
+db_host = os.getenv("POSTGRES_HOST")
+db_port = os.getenv("POSTGRES_PORT")
 
-cl = Client()
-if os.access("session.json", mode=os.R_OK):
-    session = cl.load_settings("session.json")
-    if session:
-        cl.set_settings(session)
+# Initialize database tables
+from models import Profile, Assessment, Product
+from models import db
+db.drop_tables([Profile, Assessment, Product])
+create_tables()
+
+# Test data
 try:
-    cl.login(ACCOUNT_USERNAME, ACCOUNT_PASSWORD)
-    try:
-        cl.get_timeline_feed() # check session
-    except LoginRequired:
-        print("Session is invalid, need to login via username and password")
-        old_session = cl.get_settings()
-        # use the same device uuids across logins
-        cl.set_settings({})
-        cl.set_uuids(old_session["uuids"])
+    profile = Profile.create(
+        username="test_profile",
+        full_name="Test Profile",
+        bio="Test bio",
+        followers=100,
+        following=50,
+        posts=20,
+    )
 
-        cl.login(ACCOUNT_USERNAME, ACCOUNT_PASSWORD)
+    assessment = Assessment.create(
+        profile=profile,
+        activity_recency_score=0.8,
+        followers_authenticity_score=0.9,
+    )
 
-    cl.dump_settings("session.json")
-except Exception as e:
-    print(f"Couldn't login user using session information: {e}")
-    exit(-1)
+    product = Product.create(profile=profile, name="Test Product", description="Test description")
 
-user_id = cl.user_id_from_username(ACCOUNT_USERNAME)
-# medias = cl.user_medias(user_id, 20)
-print(user_id)
+    print("Database initialized and test data created successfully!")
 
-# sr = cl.search_users("zeinab ghasemi")
-# print(sr)
-sr_v1 = cl.search_users_v1("zeinab ghasemi", 10)
-print(sr_v1)
-# cl.search_hashtags()
+except IntegrityError as e:
+    print(f"Error creating test data: {e}")
