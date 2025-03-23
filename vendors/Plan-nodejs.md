@@ -4,3 +4,4 @@
 4. Extract Product Information: Extract product information from the bio and posts during profile assessment. Store the extracted product information in the database.
 5. Implement Pause/Resume Functionality: Add functionality to pause and resume the agents by tracking their progress in the database. Store the agent's state (e.g., last processed profile, current search query) in the database.
 6. Use Prisma for ORM
+7. Use Typescript
