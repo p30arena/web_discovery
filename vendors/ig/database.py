@@ -93,5 +93,40 @@ def create_tables():
         conn.close()
 
 
+def calculate_activity_recency_score():
+    # Implement logic to calculate activity recency score
+    pass
+
+
+def calculate_followers_authenticity_score():
+    # Implement logic to calculate followers authenticity score
+    pass
+
+
+def calculate_profile_picture_authenticity():
+    # Implement logic to calculate profile picture authenticity
+    pass
+
+
+def calculate_bio_extraction_completeness():
+    # Implement logic to calculate bio extraction completeness
+    pass
+
+
+def calculate_product_extraction_completeness():
+    # Implement logic to calculate product extraction completeness
+    pass
+
+
+def calculate_products_count():
+    # Implement logic to calculate products count
+    pass
+
+
+def calculate_products_to_other_posts_ratio():
+    # Implement logic to calculate products to other posts ratio
+    pass
+
+
 if __name__ == '__main__':
     create_tables()
