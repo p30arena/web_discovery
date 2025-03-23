@@ -19,6 +19,7 @@
     "@types/node": "^22.13.11",
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
+    "instagram-graph-api": "^7.0.0",
     "pg": "^8.14.1"
   }
 }
