@@ -1,0 +1,65 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Profile {
+  id                Int      @id @default(autoincrement())
+  username          String   @unique
+  bio               String?
+  location          String?
+  posts             Post[]
+  assessmentScores  AssessmentScore[]
+  createdAt         DateTime @default(now())
+  products          Product[]
+  agentProgress     AgentProgress[]
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  profileId Int
+  content   String
+  quality   Int
+  createdAt DateTime @default(now())
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+}
+
+model AssessmentScore {
+  id                Int      @id @default(autoincrement())
+  profileId         Int
+  activityRecency   Int
+  followersAuthenticity Int
+  profilePictureAuthenticity Int
+  bioExtractionCompleteness Int
+  productExtractionCompleteness Int
+  productsCount     Int
+  productsToOtherPostsRatio Int
+  createdAt         DateTime @default(now())
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  profileId Int
+  name      String
+  description String?
+  createdAt DateTime @default(now())
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+}
+
+model AgentProgress {
+  id        Int      @id @default(autoincrement())
+  profileId Int
+  lastProcessedProfile Int?
+  currentSearchQuery String?
+  createdAt DateTime @default(now())
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+}
