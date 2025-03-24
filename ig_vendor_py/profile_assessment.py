@@ -110,6 +110,7 @@ Extract the products attributes (name, description, and price) from the followin
             product_info.extend([p.model_dump() for p in filtered_products])
             for product in filtered_products:
                 Product.create(
+                    post_id=post.id,
                     profile=profile,
                     name=product.name,
                     description=product.description,

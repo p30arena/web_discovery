@@ -51,6 +51,7 @@ class Product(BaseModel):
     name = TextField()
     description = TextField(null=True)
     price = CharField(null=True, max_length=20)
+    post_id = CharField(null=True, max_length=255)
 
 
 def create_tables():
