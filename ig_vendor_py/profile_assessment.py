@@ -68,11 +68,12 @@ def assess_profile(username):
             'response_schema': ActivityExtraction,
         })
         
+        assert isinstance(response.parsed, ActivityExtraction), f"Expected ActivityExtraction, got {type(response.parsed)}"
         activity: ActivityExtraction = response.parsed
     except Exception as e:
         print(f"LLM Activity Extraction Error: {e}")
         # TODO: Implement more robust error handling (e.g., logging, retrying)
-        activity = "Unknown"
+        activity = ActivityExtraction(activity="Unknown")
 
     # Use LLM to extract product information from posts
     retries = 3
@@ -102,6 +103,7 @@ Extract the products attributes (name, description, and price) from the followin
                 'response_mime_type': 'application/json',
                 'response_schema': PostExtraction,
             })
+            assert isinstance(response.parsed, PostExtraction), f"Expected PostExtraction, got {type(response.parsed)}"
             product_extraction: PostExtraction = response.parsed
             filtered_products = [p for p in product_extraction.products if p.name is not None]
             products.extend(filtered_products)
@@ -134,7 +136,7 @@ Extract the products attributes (name, description, and price) from the followin
     profile_picture_authenticity = 0.5  # Placeholder value
 
     # Bio Extraction Completeness
-    bio_extraction_completeness = min(1, len(user_info.biography) / 100)  # Assuming 100 characters is a good bio
+    bio_extraction_completeness = min(1, len(user_info.biography or "") / 100)  # Assuming 100 characters is a good bio
 
     # Product Extraction Completeness
     product_extraction_completeness = min(1, len(products) / 5)  # Assuming 5 products is good
