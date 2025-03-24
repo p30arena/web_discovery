@@ -79,6 +79,13 @@ def assess_profile(username):
             product_extraction: PostExtraction = PostExtraction.model_validate_json(response.text)
             products.extend(product_extraction.products)
             product_info.extend([p.model_dump() for p in product_extraction.products])
+            for product in product_extraction.products:
+                Product.create(
+                    profile=profile,
+                    product_name=product.product_name,
+                    product_description=product.product_description,
+                    price=product.price,
+                )
         except Exception as e:
             print(f"LLM Product Extraction Error: {e}")
             # TODO: Implement more robust error handling (e.g., logging, retrying)
@@ -124,6 +131,9 @@ def assess_profile(username):
     print(f"Profile {username} assessed successfully.")
     print(f"Activity: {activity}")
     print(f"Product information: {product_info}")
+    print(f"Profile Assessment: {assessment}")
+
+    return assessment
 
 
 if __name__ == "__main__":
