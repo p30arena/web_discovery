@@ -306,6 +306,7 @@ dependencies = [
     { name = "peewee" },
     { name = "pillow" },
     { name = "psycopg2-binary" },
+    { name = "pydantic" },
     { name = "python-dotenv" },
 ]
 
@@ -316,6 +317,7 @@ requires-dist = [
     { name = "peewee", specifier = ">=3.17.9" },
     { name = "pillow", specifier = ">=11.1.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "pydantic", specifier = ">=2.10.1" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
 ]
 
