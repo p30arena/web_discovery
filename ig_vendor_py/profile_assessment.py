@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 from typing_extensions import Annotated
 from datetime import datetime
 from client import cl
@@ -38,9 +38,9 @@ safety_settings: List[types.SafetySettingDict] = [
 
 class ProductInfo(BaseModel):
     """properties must be defined in alphabetic order: https://ai.google.dev/gemini-api/docs/structured-output?lang=python#property-ordering"""
-    description: str
-    name: str
-    price: str
+    description: Optional[str]
+    name: str = Field(..., min_length=1)  # Enforce non-empty string
+    price: Optional[str]
 
 class PostExtraction(BaseModel):
     products: List[ProductInfo]
@@ -103,14 +103,14 @@ Extract the products attributes (name, description, and price) from the followin
                 'response_schema': PostExtraction,
             })
             product_extraction: PostExtraction = response.parsed
-            product_extraction.products = [p for p in product_extraction.products if p.name]
-            products.extend(product_extraction.products)
-            product_info.extend([p.model_dump() for p in product_extraction.products])
-            for product in product_extraction.products:
+            filtered_products = [p for p in product_extraction.products if p.name is not None]
+            products.extend(filtered_products)
+            product_info.extend([p.model_dump() for p in filtered_products])
+            for product in filtered_products:
                 Product.create(
                     profile=profile,
-                    product_name=product.name,
-                    product_description=product.description,
+                    name=product.name,
+                    description=product.description,
                     price=product.price,
                 )
         except Exception as e:
