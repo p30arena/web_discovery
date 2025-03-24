@@ -34,9 +34,14 @@ def search_profiles(keywords, location=None):
     return results
 
 
+import argparse
+
 if __name__ == "__main__":
-    keywords = ["shop", "store", "fashion"]
-    profiles = search_profiles(keywords)
+    parser = argparse.ArgumentParser(description="Search for Instagram profiles based on keywords.")
+    parser.add_argument("keywords", nargs="+", type=str, help="The keywords to search for.")
+    args = parser.parse_args()
+
+    profiles = search_profiles(args.keywords)
     print(f"Found {len(profiles)} profiles.")
     for profile in profiles:
         print(profile.username)
