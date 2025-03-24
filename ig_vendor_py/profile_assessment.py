@@ -7,6 +7,8 @@ from datetime import datetime
 from client import cl
 from models import Profile, Assessment, Product
 from peewee import DoesNotExist
+import time
+import argparse
 
 load_dotenv()
 
@@ -39,7 +41,7 @@ def assess_profile(username):
 
     # Use LLM to extract activity from the profile bio
     try:
-        prompt = f"What is the main activity of this profile? Answer with one word: {user_info.biography}"
+        prompt = f"What is the main activity or category of this Instagram profile? Answer with one word: {user_info.biography}"
         response = model.generate_content(prompt, generation_config={
             'response_mime_type': 'application/json',
             'response_schema': ActivityExtraction,
@@ -51,12 +53,24 @@ def assess_profile(username):
         activity = "Unknown"
 
     # Use LLM to extract product information from posts
-    media = cl.user_medias(user_id, amount=5)  # Get the 5 latest posts
+    retries = 3
+    media = []
+    for i in range(retries):
+        try:
+            media = cl.user_medias(user_id, amount=5)  # Get the 5 latest posts
+            break  # If successful, break the loop
+        except Exception as e:
+            print(f"Error fetching media (attempt {i+1}/{retries}): {e}")
+            time.sleep(2)  # Wait for 2 seconds before retrying
+    else:
+        print("Failed to fetch media after multiple retries.")
+        media = []
+
     product_info = []
     products = []
     for post in media:
         try:
-            prompt = f"Extract product names and descriptions from the following text: {post.caption_text}"
+            prompt = f"Extract product names, descriptions, and prices from the following Instagram post: {post.caption_text}. If no products are mentioned, return an empty list."
             response = model.generate_content(prompt, generation_config={
                 'response_mime_type': 'application/json',
                 'response_schema': PostExtraction,
@@ -66,13 +80,15 @@ def assess_profile(username):
             product_info.extend([p.model_dump() for p in product_extraction.products])
         except Exception as e:
             print(f"LLM Product Extraction Error: {e}")
+            product_info.append({"product_name": "N/A", "product_description": "N/A", "price": "N/A"})
+            products.append({"product_name": "N/A", "product_description": "N/A", "price": "N/A"})
             # TODO: Implement more robust error handling (e.g., logging, retrying)
             #products = []
 
     # Calculate scores based on the criteria in Overview.md
     # Activity Recency Score
     if media:
-        latest_post_date = media[0].taken_at
+        latest_post_date = media[0].taken_at.replace(tzinfo=None)
         activity_recency_score = 1 / (1 + (datetime.now() - latest_post_date).days)
     else:
         activity_recency_score = 0.0
@@ -110,8 +126,6 @@ def assess_profile(username):
     print(f"Activity: {activity}")
     print(f"Product information: {product_info}")
 
-
-import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Assess an Instagram profile.")
