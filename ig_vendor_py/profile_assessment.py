@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from pydantic import BaseModel, Field
 from typing import List
 from typing_extensions import Annotated
@@ -15,12 +16,30 @@ load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-2.0-flash')
+genai_client = genai.Client(api_key=GOOGLE_API_KEY)
+safety_settings: List[types.SafetySettingDict] = [
+    {
+    "category": types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    "threshold": types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+    "category": types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    "threshold": types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+    "category": types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+    "threshold": types.HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+    "category": types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    "threshold": types.HarmBlockThreshold.BLOCK_NONE,
+    },
+]
 
 class ProductInfo(BaseModel):
-    product_name: str
-    product_description: str
+    """properties must be defined in alphabetic order: https://ai.google.dev/gemini-api/docs/structured-output?lang=python#property-ordering"""
+    description: str
+    name: str
     price: str
 
 class PostExtraction(BaseModel):
@@ -43,11 +62,13 @@ def assess_profile(username):
     # Use LLM to extract activity from the profile bio
     try:
         prompt = f"What is the main activity or category of this Instagram profile? Answer with one word: {user_info.biography}"
-        response = model.generate_content(prompt, generation_config={
+        response = genai_client.models.generate_content(model="gemini-2.0-flash", contents=prompt, config={
+            "safety_settings": safety_settings,
             'response_mime_type': 'application/json',
             'response_schema': ActivityExtraction,
         })
-        activity = response.text.strip()
+        
+        activity: ActivityExtraction = response.parsed
     except Exception as e:
         print(f"LLM Activity Extraction Error: {e}")
         # TODO: Implement more robust error handling (e.g., logging, retrying)
@@ -74,22 +95,22 @@ def assess_profile(username):
             prompt = f"""
 Extract the products attributes (name, description, and price) from the following Instagram post: {post.caption_text}. 
 - If no products are mentioned, return an empty list (`[]`) for `products`.
-- For each product, include all attributes (`product_name`, `product_description`, `price`).
-- If an attribute is not available in the post, use `N/A` as the value.
 - Do not omit any fields; all must be present in the output.
 """
-            response = model.generate_content(prompt, generation_config={
+            response = genai_client.models.generate_content(model="gemini-2.0-flash", contents=prompt, config={
+                "safety_settings": safety_settings,
                 'response_mime_type': 'application/json',
                 'response_schema': PostExtraction,
             })
-            product_extraction: PostExtraction = PostExtraction.model_validate_json(response.text)
+            product_extraction: PostExtraction = response.parsed
+            product_extraction.products = [p for p in product_extraction.products if p.name]
             products.extend(product_extraction.products)
             product_info.extend([p.model_dump() for p in product_extraction.products])
             for product in product_extraction.products:
                 Product.create(
                     profile=profile,
-                    product_name=product.product_name,
-                    product_description=product.product_description,
+                    product_name=product.name,
+                    product_description=product.description,
                     price=product.price,
                 )
         except Exception as e:

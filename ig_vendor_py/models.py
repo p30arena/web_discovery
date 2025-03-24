@@ -48,8 +48,9 @@ class Assessment(BaseModel):
 
 class Product(BaseModel):
     profile = ForeignKeyField(Profile, backref="products")
-    name = CharField()
+    name = TextField()
     description = TextField(null=True)
+    price = CharField(null=True, max_length=20)
 
 
 def create_tables():
