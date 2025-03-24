@@ -19,15 +19,15 @@ genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-2.0-flash')
 
 class ProductInfo(BaseModel):
-    product_name: Annotated[str, Field(..., description="Name of the product")]
-    product_description: Annotated[str, Field(..., description="Description of the product")]
-    price: Annotated[str, Field(..., description="Price of the product")]
+    product_name: str
+    product_description: str
+    price: str
 
 class PostExtraction(BaseModel):
-    products: Annotated[List[ProductInfo], Field(..., description="List of products extracted from the post")]
+    products: List[ProductInfo]
 
 class ActivityExtraction(BaseModel):
-    activity: Annotated[str, Field(..., description="Activity or category of the profile (e.g., beauty, fashion)")]
+    activity: str
 
 def assess_profile(username):
 
@@ -71,7 +71,13 @@ def assess_profile(username):
     products = []
     for post in media:
         try:
-            prompt = f"Extract product names, descriptions, and prices from the following Instagram post: {post.caption_text}. If no products are mentioned, return an empty list. If an attribute is not available put `N/A`."
+            prompt = f"""
+Extract the products attributes (name, description, and price) from the following Instagram post: {post.caption_text}. 
+- If no products are mentioned, return an empty list (`[]`) for `products`.
+- For each product, include all attributes (`product_name`, `product_description`, `price`).
+- If an attribute is not available in the post, use `N/A` as the value.
+- Do not omit any fields; all must be present in the output.
+"""
             response = model.generate_content(prompt, generation_config={
                 'response_mime_type': 'application/json',
                 'response_schema': PostExtraction,
