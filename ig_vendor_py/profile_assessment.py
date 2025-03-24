@@ -8,7 +8,7 @@ from typing_extensions import Annotated
 from datetime import datetime
 from client import cl
 from models import Profile, Assessment, Product
-from peewee import DoesNotExist
+from peewee import DoesNotExist, IntegrityError
 import time
 import argparse
 
@@ -116,11 +116,12 @@ Extract the products attributes (name, description, and price) from the followin
                     description=product.description,
                     price=product.price,
                 )
+        except IntegrityError as e:
+            # Unique Constraint Error
+            print(f"IntegrityError: {e}")
         except Exception as e:
-            print(f"LLM Product Extraction Error: {e}")
+            print(f"Product ETS Error: {e}")
             print(post.caption_text)
-            # TODO: Implement more robust error handling (e.g., logging, retrying)
-            #products = []
 
     # Calculate scores based on the criteria in Overview.md
     # Activity Recency Score
