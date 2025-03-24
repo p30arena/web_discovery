@@ -7,3 +7,4 @@
 7. Use Types
 8. Always Load Credentials, Configs, and Sensitive data from .env
 9. Working directory is "ig_vendor_py"
+10. Use LLM (Gemini Flash 2.0) for Profile Bio and Product Extraction

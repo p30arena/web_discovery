@@ -6,9 +6,6 @@ from peewee import IntegrityError
 
 load_dotenv()
 
-ACCOUNT_USERNAME = os.getenv("ACCOUNT_USERNAME")
-ACCOUNT_PASSWORD = os.getenv("ACCOUNT_PASSWORD")
-
 
 def search_profiles(keywords, location=None):
     results = []
