@@ -88,6 +88,7 @@ def assess_profile(username):
                 )
         except Exception as e:
             print(f"LLM Product Extraction Error: {e}")
+            print(post.caption_text)
             # TODO: Implement more robust error handling (e.g., logging, retrying)
             #products = []
 
