@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 import google.generativeai as genai
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List
+from typing_extensions import Annotated
 from datetime import datetime
 from client import cl
 from models import Profile, Assessment, Product
@@ -18,15 +19,15 @@ genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-2.0-flash')
 
 class ProductInfo(BaseModel):
-    product_name: str = Field(..., description="Name of the product")
-    product_description: Optional[str] = Field(None, description="Description of the product")
-    price: Optional[str] = Field(None, description="Price of the product")
+    product_name: Annotated[str, Field(..., description="Name of the product")]
+    product_description: Annotated[str, Field(..., description="Description of the product")]
+    price: Annotated[str, Field(..., description="Price of the product")]
 
 class PostExtraction(BaseModel):
-    products: List[ProductInfo] = Field(..., description="List of products extracted from the post")
+    products: Annotated[List[ProductInfo], Field(..., description="List of products extracted from the post")]
 
 class ActivityExtraction(BaseModel):
-    activity: str = Field(..., description="Activity or category of the profile (e.g., beauty, fashion)")
+    activity: Annotated[str, Field(..., description="Activity or category of the profile (e.g., beauty, fashion)")]
 
 def assess_profile(username):
 
@@ -70,7 +71,7 @@ def assess_profile(username):
     products = []
     for post in media:
         try:
-            prompt = f"Extract product names, descriptions, and prices from the following Instagram post: {post.caption_text}. If no products are mentioned, return an empty list."
+            prompt = f"Extract product names, descriptions, and prices from the following Instagram post: {post.caption_text}. If no products are mentioned, return an empty list. If an attribute is not available put `N/A`."
             response = model.generate_content(prompt, generation_config={
                 'response_mime_type': 'application/json',
                 'response_schema': PostExtraction,
@@ -80,8 +81,6 @@ def assess_profile(username):
             product_info.extend([p.model_dump() for p in product_extraction.products])
         except Exception as e:
             print(f"LLM Product Extraction Error: {e}")
-            product_info.append({"product_name": "N/A", "product_description": "N/A", "price": "N/A"})
-            products.append({"product_name": "N/A", "product_description": "N/A", "price": "N/A"})
             # TODO: Implement more robust error handling (e.g., logging, retrying)
             #products = []
 
